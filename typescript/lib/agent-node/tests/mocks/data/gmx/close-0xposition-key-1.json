@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "service": "gmx",
+    "endpoint": "/positions/close",
+    "method": "POST",
+    "recordedAt": "2025-10-22T00:00:00.000Z"
+  },
+  "request": {
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "positionKey": "0xposition-key-1",
+      "walletAddress": "0x2D2c313EC7650995B193a34E16bE5B86eEdE872d",
+      "sizeDeltaUsd": "0"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "rawBody": "eyJleGVjdXRpb25JZCI6IjB4ZXhlYy1jbG9zZS0xMjM0NTYiLCJzdGF0dXMiOiJwZW5kaW5nIiwiZXN0aW1hdGVkUG5sIjoiMjUwMDAwMCJ9"
+  }
+}

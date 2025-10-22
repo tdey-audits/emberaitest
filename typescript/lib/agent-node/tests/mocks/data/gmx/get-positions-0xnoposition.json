@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "service": "gmx",
+    "endpoint": "/positions",
+    "method": "GET",
+    "recordedAt": "2025-10-22T00:00:00.000Z"
+  },
+  "request": {
+    "headers": {},
+    "query": {
+      "walletAddress": "0xNoPositions"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "rawBody": "eyJwb3NpdGlvbnMiOltdfQ=="
+  }
+}

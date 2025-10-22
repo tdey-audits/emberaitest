@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "service": "gmx",
+    "endpoint": "/positions/open",
+    "method": "POST",
+    "recordedAt": "2025-10-22T00:00:00.000Z"
+  },
+  "request": {
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "walletAddress": "0x2D2c313EC7650995B193a34E16bE5B86eEdE872d",
+      "marketAddress": "0x70d95587d40A2caf56bd97485aB3Eec10Bee6336",
+      "side": "long",
+      "collateralAmount": "3000000",
+      "leverage": "3",
+      "orderType": "limit",
+      "limitPrice": "2450000000000000000000000000000000",
+      "collateralTokenAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "rawBody": "eyJleGVjdXRpb25JZCI6IjB4ZXhlYy0xMjM0NTY3ODkyIiwic3RhdHVzIjoicGVuZGluZyIsInBvc2l0aW9uIjp7ImtleSI6IjB4cG9zaXRpb24ta2V5LTMiLCJtYXJrZXRBZGRyZXNzIjoiMHg3MGQ5NTU4N2Q0MEEyY2FmNTZiZDk3NDg1YUIzRWVjMTBCZWU2MzM2Iiwic2lkZSI6ImxvbmciLCJjb2xsYXRlcmFsQW1vdW50IjoiMzAwMDAwMCIsImxldmVyYWdlIjoiMyIsIm9yZGVyVHlwZSI6ImxpbWl0IiwibGltaXRQcmljZSI6IjI0NTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiLCJzaXplSW5Vc2QiOiI5MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAifX0="
+  }
+}
