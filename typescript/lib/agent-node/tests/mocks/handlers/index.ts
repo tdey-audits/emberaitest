@@ -1,3 +1,4 @@
+import { dataFeedsHandlers } from './data-feeds.js';
 import { hyperbolicHandlers } from './hyperbolic.js';
 import { openaiHandlers } from './openai.js';
 import { openrouterHandlers } from './openrouter.js';
@@ -12,4 +13,5 @@ export const handlers = [
   ...xaiHandlers,
   ...hyperbolicHandlers,
   ...viemHandlers,
+  ...dataFeedsHandlers,
 ];
