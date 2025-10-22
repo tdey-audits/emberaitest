@@ -8,6 +8,8 @@ import { v7 as uuidv7 } from 'uuid';
 
 import { Logger } from '../../utils/logger.js';
 import type { WorkflowRuntime } from '../../workflows/runtime.js';
+import type { WorkflowExecution } from '../../workflows/types.js';
+import type { RiskManager, RiskPositionOutcome } from '../../risk/index.js';
 import { buildArtifactMessageText, getActionTextFromParams } from '../builders/artifactBuilder.js';
 import type { ActiveTask, TaskState, WorkflowResult, WorkflowEvent } from '../types.js';
 
@@ -38,9 +40,18 @@ export class WorkflowHandler {
   private activeTasks = new Map<string, ActiveTask>();
   private pendingCancels = new Set<string>();
   private logger: Logger;
+  private riskTrackedTasks = new Set<string>();
 
-  constructor(private workflowRuntime?: WorkflowRuntime) {
+  constructor(private workflowRuntime?: WorkflowRuntime, private riskManager?: RiskManager) {
     this.logger = Logger.getInstance('WorkflowHandler');
+
+    if (this.riskManager) {
+      this.riskManager.on('trading-halted', (payload: { reason?: string }) => {
+        const reason = payload?.reason ?? 'Risk manager halted trading';
+        this.logger.warn(reason);
+        this.forceCancelActiveTasks(reason);
+      });
+    }
   }
 
   /**
@@ -312,6 +323,34 @@ export class WorkflowHandler {
         contextId,
       });
 
+      if (this.riskManager) {
+        try {
+          this.riskManager.registerWorkflowExecution({
+            workflowName,
+            pluginId,
+            taskId: execution.id,
+            contextId,
+            params: workflowParams,
+            metadata: execution.metadata,
+          });
+          this.riskTrackedTasks.add(execution.id);
+        } catch (error) {
+          this.logger.error('Risk manager blocked workflow execution', {
+            workflowName,
+            pluginId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          if (typeof this.workflowRuntime.cancelExecution === 'function') {
+            try {
+              this.workflowRuntime.cancelExecution(execution.id);
+            } catch {
+              // Ignore cancellation errors
+            }
+          }
+          throw error;
+        }
+      }
+
       // Create task event for the new workflow
       const task: Task = {
         kind: 'task',
@@ -340,6 +379,10 @@ export class WorkflowHandler {
             } catch {
               // Ignore cancellation errors
             }
+          }
+          if (this.riskManager && this.riskTrackedTasks.has(execution.id)) {
+            this.riskTrackedTasks.delete(execution.id);
+            this.riskManager.cancelWorkflow(execution.id, 'aborted');
           }
           resolve();
         };
@@ -471,6 +514,7 @@ export class WorkflowHandler {
               final: true,
             };
             eventBus.publish(canceledUpdate);
+            this.handleRiskCancel(execution.id, 'aborted');
             return;
           }
 
@@ -488,6 +532,7 @@ export class WorkflowHandler {
               final: true,
             };
             eventBus.publish(completedUpdate);
+            this.handleRiskCompletion(execution, 'completed');
           } else if (execution.state === 'failed') {
             const failedUpdate: TaskStatusUpdateEvent = {
               kind: 'status-update',
@@ -499,6 +544,7 @@ export class WorkflowHandler {
               final: true,
             };
             eventBus.publish(failedUpdate);
+            this.handleRiskCompletion(execution, 'failed');
           } else if (execution.state === 'canceled') {
             const canceledUpdate: TaskStatusUpdateEvent = {
               kind: 'status-update',
@@ -510,8 +556,10 @@ export class WorkflowHandler {
               final: true,
             };
             eventBus.publish(canceledUpdate);
+            this.handleRiskCancel(execution.id, 'canceled');
           }
         } catch (error: unknown) {
+          this.handleRiskCompletion(execution, 'failed');
           const errorMessage: Message = {
             kind: 'message',
             messageId: uuidv7(),
@@ -549,6 +597,59 @@ export class WorkflowHandler {
     }
   }
 
+  private handleRiskCompletion(execution: WorkflowExecution, status: RiskPositionOutcome['status']): void {
+    if (!this.riskManager || !this.riskTrackedTasks.has(execution.id)) {
+      return;
+    }
+    this.riskTrackedTasks.delete(execution.id);
+    const pnl = this.extractPnlFromResult(execution.result);
+    this.riskManager.completeWorkflow(execution.id, {
+      status,
+      pnlUsd: pnl,
+      metadata: execution.metadata,
+    });
+  }
+
+  private handleRiskCancel(taskId: string, reason: string): void {
+    if (!this.riskManager || !this.riskTrackedTasks.has(taskId)) {
+      return;
+    }
+    this.riskTrackedTasks.delete(taskId);
+    this.riskManager.cancelWorkflow(taskId, reason);
+  }
+
+  private extractPnlFromResult(result: unknown): number | undefined {
+    if (!result || typeof result !== 'object') {
+      return undefined;
+    }
+    const record = result as Record<string, unknown>;
+    const candidates = ['pnlUsd', 'realizedPnlUsd', 'netPnlUsd', 'profitUsd', 'lossUsd'];
+    for (const key of candidates) {
+      const value = record[key];
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        if (key === 'lossUsd') {
+          return -Math.abs(value);
+        }
+        return value;
+      }
+    }
+    return undefined;
+  }
+
+  private forceCancelActiveTasks(reason: string): void {
+    if (this.activeTasks.size === 0) {
+      return;
+    }
+    this.logger.warn('Force canceling active tasks due to risk halt', {
+      reason,
+      count: this.activeTasks.size,
+    });
+    for (const [taskId, active] of this.activeTasks.entries()) {
+      active.controller.abort();
+      this.pendingCancels.delete(taskId);
+    }
+  }
+
   /**
    * Cancels a task
    */
@@ -557,6 +658,7 @@ export class WorkflowHandler {
     if (active) {
       this.activeTasks.delete(taskId);
       active.controller.abort();
+      this.handleRiskCancel(taskId, 'canceled');
 
       if (typeof this.workflowRuntime?.cancelExecution === 'function') {
         try {
@@ -569,6 +671,7 @@ export class WorkflowHandler {
     }
 
     this.pendingCancels.add(taskId);
+    this.handleRiskCancel(taskId, 'pending-cancel');
 
     if (typeof this.workflowRuntime?.cancelExecution === 'function') {
       try {

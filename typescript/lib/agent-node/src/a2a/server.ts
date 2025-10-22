@@ -23,6 +23,8 @@ import { Logger } from '../utils/logger.js';
 import { WorkflowRuntime } from '../workflows/runtime.js';
 import type { AgentConfigHandle, HotReloadHandler } from '../config/runtime/init.js';
 import type { ServiceConfig } from '../config.js';
+import { extractGuardrails } from '../config/utils/card-inspector.js';
+import { RiskManager, type RiskStatusSummary, type RiskMarketVolatilityInput } from '../risk/index.js';
 
 import { createAgentExecutor } from './agentExecutor.js';
 
@@ -30,6 +32,7 @@ interface ServerConfig {
   serviceConfig: ServiceConfig;
   agentConfig: AgentConfigHandle;
   workflowRuntime?: WorkflowRuntime;
+  riskManager?: RiskManager;
   onRequestLog?: (entry: RequestLogEntry) => void;
 }
 
@@ -61,10 +64,12 @@ type ExpressWithRuntime = Express & {
   workflowRuntime?: WorkflowRuntime;
   taskStore?: InMemoryTaskStore;
   loggingEnabled?: boolean;
+  riskManager?: RiskManager;
 };
 type ServerWithRuntime = Server & {
   workflowRuntime?: WorkflowRuntime;
   taskStore?: InMemoryTaskStore;
+  riskManager?: RiskManager;
 };
 
 /**
