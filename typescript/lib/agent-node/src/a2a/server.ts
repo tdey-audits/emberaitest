@@ -23,6 +23,12 @@ import { Logger } from '../utils/logger.js';
 import { WorkflowRuntime } from '../workflows/runtime.js';
 import type { AgentConfigHandle, HotReloadHandler } from '../config/runtime/init.js';
 import type { ServiceConfig } from '../config.js';
+import {
+  correlationMiddleware,
+  metricsMiddleware,
+  loggingMiddleware,
+  metricsEndpoint,
+} from '../observability/middleware.js';
 
 import { createAgentExecutor } from './agentExecutor.js';
 
@@ -102,6 +108,13 @@ export async function createA2AServer(config: ServerConfig): Promise<Server> {
 
   logger.info(`A2A Path: ${Logger.colorValue(a2aPath)}`);
   logger.info(`Agent Card Origin: ${Logger.colorValue(basePreview.origin)}`);
+
+  // Add observability middleware (before other middleware)
+  app.use(correlationMiddleware);
+  app.use(metricsMiddleware);
+  if (loggingEnabled) {
+    app.use(loggingMiddleware);
+  }
 
   setupMiddleware(app, {
     logRequests: loggingEnabled,
@@ -205,6 +218,9 @@ export async function createA2AServer(config: ServerConfig): Promise<Server> {
   });
 
   registerAdditionalRoutes(app, a2aPath);
+
+  // Add metrics endpoint for Prometheus scraping
+  app.get('/metrics', metricsEndpoint());
 
   (app as ExpressWithRuntime).workflowRuntime = workflowRuntime;
   (app as ExpressWithRuntime).taskStore = taskStore;
