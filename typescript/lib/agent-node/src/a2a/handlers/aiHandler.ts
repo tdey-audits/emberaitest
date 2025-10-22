@@ -8,6 +8,7 @@ import type { Tool, TextStreamPart } from 'ai';
 
 import type { AIService } from '../../ai/service.js';
 import type { SessionManager } from '../sessions/manager.js';
+import type { RiskManager } from '../../risk/index.js';
 import { Logger } from '../../utils/logger.js';
 
 import { StreamProcessor } from './streaming/StreamProcessor.js';
@@ -26,8 +27,9 @@ export class AIHandler {
     private ai: AIService,
     private workflowHandler: WorkflowHandler,
     private sessionManager: SessionManager,
+    private riskManager?: RiskManager,
   ) {
-    this.toolHandler = new ToolHandler(ai);
+    this.toolHandler = new ToolHandler(ai, riskManager);
     this.logger = Logger.getInstance('AIHandler');
     this.streamProcessor = new StreamProcessor();
   }

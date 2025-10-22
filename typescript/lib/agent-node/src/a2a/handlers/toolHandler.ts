@@ -5,6 +5,7 @@
 import type { Tool } from 'ai';
 
 import type { AIService } from '../../ai/service.js';
+import type { RiskManager } from '../../risk/index.js';
 import { Logger } from '../../utils/logger.js';
 
 /**
@@ -13,7 +14,7 @@ import { Logger } from '../../utils/logger.js';
 export class ToolHandler {
   private logger: Logger;
 
-  constructor(private ai: AIService) {
+  constructor(private ai: AIService, private riskManager?: RiskManager) {
     this.logger = Logger.getInstance('ToolHandler');
   }
 
@@ -59,14 +60,38 @@ export class ToolHandler {
     // Get tools as a Record from AIService
     const toolsRecord = this.ai?.getToolsAsRecord?.();
     if (toolsRecord) {
-      return { tools: toolsRecord };
+      return {
+        tools: toolsRecord,
+        onToolCall: async (name: string, args: unknown) => {
+          this.guardToolCall(name, args);
+          return await this.executeToolCall(name, args);
+        },
+      };
     }
 
     // Fallback to available tools map
     const availableTools = this.getAvailableToolsAsMap();
     return {
       tools: availableTools,
-      onToolCall: (name: string, args: unknown) => this.executeToolCall(name, args),
+      onToolCall: async (name: string, args: unknown) => {
+        this.guardToolCall(name, args);
+        return await this.executeToolCall(name, args);
+      },
     };
+  }
+
+  private guardToolCall(name: string, args: unknown): void {
+    if (!this.riskManager) {
+      return;
+    }
+    const normalizedArgs = this.normalizeArgs(args);
+    this.riskManager.evaluateToolInvocation(name, normalizedArgs);
+  }
+
+  private normalizeArgs(args: unknown): Record<string, unknown> | undefined {
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+      return undefined;
+    }
+    return args as Record<string, unknown>;
   }
 }
