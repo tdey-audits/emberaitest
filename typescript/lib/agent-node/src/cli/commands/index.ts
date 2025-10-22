@@ -8,3 +8,4 @@ export { printConfigCommand, type PrintConfigOptions } from './print-config.js';
 export { doctorCommand, type DoctorOptions } from './doctor.js';
 export { runCommand, type RunOptions } from './run.js';
 export { bundleCommand, type BundleOptions } from './bundle.js';
+export { backtestCommand, type BacktestCommandOptions } from './backtest.js';

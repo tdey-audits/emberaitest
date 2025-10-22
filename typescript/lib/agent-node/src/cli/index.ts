@@ -15,6 +15,7 @@ import {
   doctorCommand,
   runCommand,
   bundleCommand,
+  backtestCommand,
 } from './commands/index.js';
 
 interface CliArgs {
@@ -80,6 +81,15 @@ Commands:
     --config-dir <dir>    Config directory (default: ./config)
     --output <file>       Output file (default: ./agent-bundle.json)
     --format <json|yaml>  Output format (default: json)
+
+  backtest                Run a paper-trading backtest from recorded data
+    --dataset <path>      Replay dataset JSON file (required)
+    --strategy <ref>      Strategy module path or builtin:buy-and-hold|builtin:flat
+    --initial-balance <n> Starting equity in USD (default: 100000)
+    --fee-bps <n>         Trading fee in basis points (default: 5)
+    --slippage-bps <n>    Simulated slippage in basis points (default: 2)
+    --output <file>       Write JSON report to file
+    --no-pretty           Disable pretty-printing for JSON output
 
   help                    Show this help message
 
@@ -152,6 +162,37 @@ async function main(): Promise<void> {
           format: (options['format'] as 'json' | 'yaml') ?? 'json',
         });
         break;
+
+      case 'backtest': {
+        const datasetOption = options['dataset'];
+        if (typeof datasetOption !== 'string' || datasetOption.length === 0) {
+          throw new Error('backtest command requires --dataset <path>');
+        }
+
+        const result = await backtestCommand({
+          dataset: datasetOption,
+          strategy: options['strategy'] as string | undefined,
+          initialBalanceUsd:
+            typeof options['initial-balance'] === 'string'
+              ? Number(options['initial-balance'])
+              : undefined,
+          feeBps:
+            typeof options['fee-bps'] === 'string' ? Number(options['fee-bps']) : undefined,
+          slippageBps:
+            typeof options['slippage-bps'] === 'string'
+              ? Number(options['slippage-bps'])
+              : undefined,
+          output: options['output'] as string | undefined,
+          pretty: options['no-pretty'] ? false : true,
+        });
+
+        if (!options['output'] && result.report.statistics.sharpeRatio !== null) {
+          logger.info(
+            `Sharpe ratio: ${result.report.statistics.sharpeRatio.toFixed(2)}`,
+          );
+        }
+        break;
+      }
 
       case 'help':
       case undefined:

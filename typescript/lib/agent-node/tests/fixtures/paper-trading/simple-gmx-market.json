@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "market": {
+    "name": "GMX: ARB/USDC Perps",
+    "symbol": "ARB-USDC",
+    "marketAddress": "0x00000000000000000000000000000000ARBUSD",
+    "indexToken": "0x00000000000000000000000000000000000ARB",
+    "collateralToken": "0x0000000000000000000000000000000000USDC"
+  },
+  "timeframeSeconds": 60,
+  "data": [
+    {
+      "timestamp": 1700000000000,
+      "markPrice": 1.0,
+      "indexPrice": 1.0,
+      "longFundingRate": 0,
+      "shortFundingRate": 0,
+      "openInterestLong": 250000,
+      "openInterestShort": 245000
+    },
+    {
+      "timestamp": 1700000060000,
+      "markPrice": 1.02,
+      "indexPrice": 1.02,
+      "longFundingRate": 0.00005,
+      "shortFundingRate": -0.00005,
+      "openInterestLong": 255000,
+      "openInterestShort": 243000
+    },
+    {
+      "timestamp": 1700000120000,
+      "markPrice": 1.05,
+      "indexPrice": 1.05,
+      "longFundingRate": 0.00005,
+      "shortFundingRate": -0.00005,
+      "openInterestLong": 260000,
+      "openInterestShort": 240000
+    },
+    {
+      "timestamp": 1700000180000,
+      "markPrice": 1.04,
+      "indexPrice": 1.04,
+      "longFundingRate": 0.00005,
+      "shortFundingRate": -0.00005,
+      "openInterestLong": 258000,
+      "openInterestShort": 242000
+    },
+    {
+      "timestamp": 1700000240000,
+      "markPrice": 1.08,
+      "indexPrice": 1.08,
+      "longFundingRate": 0.00005,
+      "shortFundingRate": -0.00005,
+      "openInterestLong": 265000,
+      "openInterestShort": 238000
+    }
+  ]
+}
