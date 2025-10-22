@@ -1,0 +1,29 @@
+# Railway.toml - Configuration for Railway.app deployment
+# This file defines how to build and deploy Vibekit on Railway
+# Reference: https://docs.railway.app/deploy/config-as-code
+
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install --frozen-lockfile && pnpm build"
+
+[deploy]
+startCommand = "node clients/web/dist/index.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+# Environment variables (set these in Railway dashboard)
+# Required:
+# - AUTH_SECRET
+# - OPENAI_API_KEY or OPENROUTER_API_KEY
+# - RPC_URL
+# - POSTGRES_URL (auto-provided by Railway Postgres plugin)
+# Optional:
+# - MNEMONIC
+# - QUICKNODE_API_KEY
+# - QUICKNODE_SUBDOMAIN
+# - ALLORA_API_KEY
+
+# For multi-service deployment, create separate railway.toml files
+# in each service directory or use Railway's service configuration

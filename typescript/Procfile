@@ -1,0 +1,25 @@
+# Procfile for Heroku/Railway/Platform.sh deployment
+# This file defines the process types for the application
+#
+# Usage:
+# - Heroku: Automatically detected and used
+# - Railway: Configure in railway.toml or use this directly
+# - Local: Use foreman or hivemind to run multiple processes
+#
+# Note: Adjust service ports and agent selection based on your deployment needs
+
+# Web interface (required)
+web: cd clients/web && node dist/index.js
+
+# Agents (uncomment the ones you want to deploy)
+# lending-agent: cd community/lending-agent-no-wallet && node dist/index.js
+# swapping-agent: cd community/swapping-agent-no-wallet && node dist/index.js
+# defisafety-agent: cd templates/defisafety-agent && node dist/index.js
+# quickstart-agent: cd templates/quickstart-agent && node dist/index.js
+
+# MCP Tools (optional)
+# coingecko-mcp: cd lib/mcp-tools/coingecko-mcp-server && node dist/index.js
+
+# For multi-process deployments, you may need separate dynos/services:
+# See: https://devcenter.heroku.com/articles/process-model
+# Or use Docker Compose for more control

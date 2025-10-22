@@ -10,6 +10,7 @@
 - [🧬 Repository Architecture](#-repository-architecture)
 - [⚡ Quickstart](#-quickstart)
 - [🔧 Build Your Own Agent](#-build-your-own-agent)
+- [🚀 Deployment](#-deployment)
 - [🤖 LLM Guides](#-llm-guides)
 - [💰 Contributions & Bounties](#-contributions--bounties)
 
@@ -207,6 +208,52 @@ The Quickstart Agent is now accessible through the web frontend:
 
 > [!TIP]
 > To learn more about Vibekit's agent configurations, refer to [this guide](https://github.com/EmberAGI/arbitrum-vibekit/tree/main/typescript/clients/web#agent-configuration).
+
+## 🚀 Deployment
+
+Vibekit supports deployment across multiple environments to suit different use cases:
+
+### Deployment Environments
+
+- **Development**: Local development with hot reloading and debug logging
+- **Paper Trading**: Testnet deployment for safe testing with real transactions
+- **Production**: Optimized deployment for mainnet with security hardening
+
+### Quick Deploy Commands
+
+```bash
+cd typescript
+
+# Development environment
+pnpm deploy:dev
+
+# Paper trading (testnet)
+pnpm deploy:paper
+
+# Production
+pnpm deploy:prod
+
+# Validate environment configuration
+pnpm validate:env
+```
+
+### Comprehensive Guides
+
+For detailed deployment instructions, refer to:
+
+- **[Deployment Guide](https://github.com/EmberAGI/arbitrum-vibekit/blob/main/docs/deployment-guide.md)**: Complete deployment instructions for all environments
+  - Environment configuration and validation
+  - Docker Compose configurations for dev/paper-trading/production
+  - Healthchecks and monitoring
+  - Emergency procedures and troubleshooting
+  - Backup and recovery procedures
+
+- **[CI/CD Setup Guide](https://github.com/EmberAGI/arbitrum-vibekit/blob/main/docs/ci-cd-setup.md)**: How to set up and customize the CI/CD pipeline
+  - GitHub Actions workflow configuration
+  - Adding CI tests for new agents
+  - Required secrets management
+  - Local CI testing
+  - Troubleshooting CI issues
 
 ## 🤖 LLM Guides
 
