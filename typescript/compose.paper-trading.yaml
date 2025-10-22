@@ -1,0 +1,233 @@
+# Paper Trading Docker Compose Configuration
+# This configuration is optimized for paper trading on testnets (e.g., Arbitrum Sepolia)
+# Usage: docker compose -f compose.paper-trading.yaml up
+#
+# IMPORTANT: Ensure your .env file has:
+# - RPC_URL pointing to a testnet (e.g., https://sepolia-rollup.arbitrum.io/rpc)
+# - Test wallet MNEMONIC with testnet funds
+# - All required API keys
+
+services:
+  lending-agent-no-wallet:
+    build:
+      context: ./
+      dockerfile: community/lending-agent-no-wallet/Dockerfile.prod
+    container_name: vibekit-lending-agent-no-wallet-paper
+    env_file:
+      - path: .env
+        required: true
+      - path: community/lending-agent-no-wallet/.env
+        required: false
+    environment:
+      - NODE_ENV=paper-trading
+      - LOG_LEVEL=info
+      - TESTNET_MODE=true
+    ports:
+      - 3001:3001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  swapping-agent-no-wallet:
+    build:
+      context: ./
+      dockerfile: community/swapping-agent-no-wallet/Dockerfile.prod
+    container_name: vibekit-swapping-agent-no-wallet-paper
+    env_file:
+      - path: .env
+        required: true
+      - path: community/swapping-agent-no-wallet/.env
+        required: false
+    environment:
+      - NODE_ENV=paper-trading
+      - LOG_LEVEL=info
+      - TESTNET_MODE=true
+    ports:
+      - 3005:3005
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3005/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  coingecko-mcp-server:
+    build:
+      context: ./
+      dockerfile: lib/mcp-tools/coingecko-mcp-server/Dockerfile.prod
+    container_name: vibekit-coingecko-mcp-server-paper
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - NODE_ENV=paper-trading
+      - LOG_LEVEL=info
+    ports:
+      - 3011:3011
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3011/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  defisafety-agent:
+    build:
+      context: ./
+      dockerfile: templates/defisafety-agent/Dockerfile.prod
+    container_name: vibekit-defisafety-agent-paper
+    env_file:
+      - path: .env
+        required: true
+      - path: templates/defisafety-agent/.env
+        required: false
+    environment:
+      - PORT=3010
+      - NODE_ENV=paper-trading
+      - LOG_LEVEL=info
+      - TESTNET_MODE=true
+    ports:
+      - 3010:3010
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3010/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  quickstart-agent-template:
+    build:
+      context: ./
+      dockerfile: templates/quickstart-agent/Dockerfile.prod
+    container_name: vibekit-quickstart-agent-template-paper
+    env_file:
+      - path: .env
+        required: true
+      - path: templates/quickstart-agent/.env
+        required: false
+    environment:
+      - NODE_ENV=paper-trading
+      - LOG_LEVEL=info
+      - TESTNET_MODE=true
+    ports:
+      - 3007:3007
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3007/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  web:
+    container_name: vibekit-web-app-paper
+    build:
+      context: ./
+      dockerfile: clients/web/Dockerfile.prod
+    env_file:
+      - path: .env
+        required: true
+      - path: clients/web/.env
+        required: false
+    environment:
+      POSTGRES_URL: postgresql://chatbot:changeme@db:5432/chatbot
+      AUTH_URL: http://localhost:3000/api/auth
+      PORT: 3000
+      NODE_ENV: paper-trading
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  db:
+    image: postgres:17
+    container_name: vibekit-db-paper
+    environment:
+      POSTGRES_USER: chatbot
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: chatbot
+    env_file:
+      - .env
+    volumes:
+      - db_data_paper:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatbot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  db_data_paper:
