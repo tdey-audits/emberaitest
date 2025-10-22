@@ -1,6 +1,7 @@
 import type { AgentConfig } from '@emberai/arbitrum-vibekit-core';
 import { swappingSkill } from './skills/swapping.js';
 import { documentationSkill } from './skills/documentation.js';
+import { tradingSignalSkill } from './skills/tradingSignals.js';
 
 export const agentConfig: AgentConfig = {
   name: process.env.AGENT_NAME || 'Ember Agent',
@@ -10,6 +11,7 @@ export const agentConfig: AgentConfig = {
     'Unified multi-skill DeFi agent supporting swapping, lending, liquidity, and yield trading operations on Arbitrum',
   skills: [
     // Skills implemented so far
+    tradingSignalSkill,
     swappingSkill,
     documentationSkill,
     // lendingSkill,
